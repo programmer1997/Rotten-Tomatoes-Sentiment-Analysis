@@ -33,12 +33,7 @@ def labelize_movie_ug(movie,label):
         result.append(TaggedDocument(t.split(), [prefix + '_%s' % i]))
     return result
 
-
-
-
-plt.style.use('fivethirtyeight')
-
-#cols = ['sentiment','id','date','query_string','user','text']
+#Defining headers for preprocessing
 cols = ['phraseID','sentenceID','phrase','sentiment']
 df = pd.read_table("train.tsv",sep='\t',header=1, names=cols)
 
@@ -49,13 +44,13 @@ df.drop(['phraseID','sentenceID'],axis=1,inplace=True)
 
 print(df)
 
+
 df['pre_clean_len'] = [len(t) for t in df.phrase]
 
 x = df.phrase
 y = df.sentiment
 
 #Splitting the dataset
-
 SEED = 2000
 x_train, x_validation_and_test, y_train, y_validation_and_test = train_test_split(x, y, test_size=.02, random_state=SEED)
 x_validation, x_test, y_validation, y_test = train_test_split(x_validation_and_test, y_validation_and_test, test_size=.5, random_state=SEED)
@@ -65,9 +60,6 @@ print ("Test set has total {0} entries with {1:.2f}% negative, {2:.2f}% somewhat
 
 
 X_test,X_test_PhraseID = loadTestData('test.tsv')
-
-# Tokenizer.fit_on_texts(X_train)
-
 
 all_x = pd.concat([x_train,x_validation,x_test])
 all_x_w2v = labelize_movie_ug(all_x, 'all')
@@ -96,13 +88,14 @@ for w in model_ug_cbow.wv.vocab.keys():
 print('Found %s word vectors.' % len(embeddings_index))
 
 
-
+#Tokenizing the phrases into nmbers
 Tokenizer = Tokenizer(num_words=18000)
 Tokenizer.fit_on_texts(np.concatenate((x_train, X_test), axis=0))
 Tokenizer_vocab_size = len(Tokenizer.word_index) + 1
 Tokenizer.fit_on_texts(x_train)
 sequences = Tokenizer.texts_to_sequences(x_train)
 
+#Padding all phrases to same length
 x_train_seq = pad_sequences(sequences, maxlen=57)
 print('Shape of data tensor:', x_train_seq.shape)
 
