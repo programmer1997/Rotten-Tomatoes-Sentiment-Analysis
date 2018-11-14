@@ -30,62 +30,45 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 from sklearn.model_selection import GridSearchCV, cross_val_score
 from sklearn.svm import SVC
 
-svc = LinearSVC(
-    C=0.01,
-    class_weight='balanced',
-    dual=True,
-    fit_intercept=True,
-    intercept_scaling=1,
-    loss='squared_hinge',
-    max_iter=1000,
-    multi_class='ovr',
-    penalty='l2',
-    random_state=0,
-    tol=1e-05, 
-    verbose=0
-)
 
-tfidf = CountVectorizer(
-    input='content',
-    encoding='utf-8',
-    decode_error='strict',
-    strip_accents=None,
-    lowercase=True,
-    preprocessor=None,
-    tokenizer=None,
-    stop_words=None,
-    token_pattern=r"(?u)\b\w\w+\b",
-    ngram_range=(1, 1),
-    analyzer='word',
-    max_df=0.8,
-    min_df=1,
-    max_features=None,
-    vocabulary=None,
-    binary=False,
-    dtype=np.int64
-)
-
+#Pipeline assemble the steps for feature extraction, tf-idf weighting and linear SVC
 pipeline = Pipeline([
-    ('tfidf', tfidf),   #fit and transform
-    ('svc', svc),   
+    ('vect', CountVectorizer()),    #Used for tokenisation and representing term frequency as a document-term matrix
+    ('tfidf', TfidfTransformer()),  #Used for applying tf-idf term weighting scheme on the document-term matrix
+    ('clf', LinearSVC()),           #Linear Support Vector Classifier that implements one-vs-rest scheme(OVR)
 ])
+
+
+#Parameter for hyperparameter tunning
+param_grid = {
+    'vect__max_df':[0.8,0.9,1.0],
+    'clf__C':[0.01,0.1,1.0]
+
+}
+
+#Performs exhaustive search over the specified parameter values and find the estimator that gives the best performance
+#3-fold cross validation is performed to reduce the occurrence of overfitting
+grid = GridSearchCV(pipeline, cv=3, param_grid=param_grid)
+
+#Fit data into the model
+gridSearch = grid.fit(X, y)
+print("Best: %f using %s" % (grid.best_score_, grid.best_params_)) #mean cross validated score for best estimator
+
+
 
 skf = StratifiedKFold(n_splits=3)
 
-X = df.Phrase
-y = df.Sentiment
-
 for train, test in skf.split(X, y):
-    pipeline.fit(X[train], y[train])
-    train_score = pipeline.score(X[train], y[train])
-    test_score = pipeline.score(X[test], y[test])
+    grid.fit(X[train], y[train])
+    train_score = gridSearch.best_estimator_.score(X[train], y[train])
+    test_score = gridSearch.best_estimator_.score(X[test], y[test])
     print("Train = {}, Test = {}".format(train_score, test_score))
     
-f = open('../input/submission.csv', 'w')
+f = open('../SampleSubmission.csv', 'w')
 f.write('PhraseId,Sentiment\n')
 
-
-predicted_classes = pipeline.predict(X_test)
+#Generate predicted labels
+predicted_classes = gridSearch.best_estimator_.predict(X_test)
 for i in range(0,X_test_PhraseID.shape[0]):
     f.write(str(X_test_PhraseID[i])+","+str(predicted_classes[i])+'\n')
 
