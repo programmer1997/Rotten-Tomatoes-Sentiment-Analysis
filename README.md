@@ -2,7 +2,7 @@
 ## About
 Repository for course project of CZ4032- Data Analysis and Mining
 <br> Machine Learning models for sentiment analysis on Rotten Tomato movie review dataset
-<br> Refer to the [Report](https://github.com/programmer1997/Rotten-Tomatoes-Sentiment-Analysis/blob/master/Assignment%20Report.docx) for more details
+<br> Refer to the [Report](https://github.com/programmer1997/Rotten-Tomatoes-Sentiment-Analysis/blob/master/Assignment%20Report.pdf) for more details
 
 ## Team 28
 Marcia Ong Wen Jie
